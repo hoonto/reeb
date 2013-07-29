@@ -5,7 +5,8 @@ import re
 import os
 import os.path
 
-def induce_tree(graph, node):
+
+def choose_root(graph, node):
     """
     Given an undirected, acyclic graph, returns the tree induced by taking
     'node' as the root node. Preserves edge and node metadata.
@@ -19,6 +20,17 @@ def induce_tree(graph, node):
         tree.edge[s[0]][s[1]] = graph.edge[s[0]][s[1]]
 
     return tree
+
+
+def uniform_volume(volumeless_tree):
+    """
+    Equates the edge volume with the number of members it contains.
+    """
+    tree = volumeless_tree.copy()
+    for edge in tree.edges_iter(data=True):
+        edge[2]['volume'] = edge[2]['n_members']
+        tree.add_edge(*edge)
+    return tree   
 
 
 def induce_total_volume(volumeless_tree, root=None):
@@ -71,26 +83,15 @@ def contract_augmented_reeb_graph(g):
     return h
 
 
-def endow_graph(g, parameter_space, likelihoods):
-    """
-    Given a contracted reeb graph with the component edge property, endows
-    the graph nodes with the 'height' property and the edges with the
-    'volume' property.
-    """
-    h = g.copy()
-    for v in h:
-        h.node[v]['height'] = likelihoods[v][-1]
-    for e in h.edges_iter():
-        h[e[0]][e[1]]['volume'] = len(h[e[0]][e[1]]['component']) + 1
-    return h
-
-
 def compute(neighbors, values):
     """
     Given the neighbors of each node, and the values at each node, returns
     the contour tree as a networkx object.
 
     Interfaces with the library using CFFI.
+
+    Returns a graph (not a tree!) with each node having the 'height' property
+    and each edge having the 'n_members' property.
     """
     ffi = cffi.FFI()
 
@@ -135,8 +136,19 @@ def compute(neighbors, values):
         num_out_edges,
         out_edges)
 
-    tree_nodes = [out_nodes[0][i] for i in range(num_out_nodes[0])]
-    tree_edges = [(out_edges[0][i][0], out_edges[0][i][1], out_edges[0][i][2])\
-        for i in range(num_out_edges[0])]
+    g = nx.Graph()
+    # add all of the nodes along with the 'height' property
+    for i in range(num_out_nodes[0]):
+        node = out_nodes[0][i]
+        g.add_node(node, dict(height=values[node]))
 
-    return tree_nodes, tree_edges
+    # and add all of the edges
+    for i in range(num_out_edges[0]):
+        hi = out_edges[0][i][0]
+        lo = out_edges[0][i][1]
+        n_members = out_edges[0][i][2]
+        g.add_edge(hi,lo,dict(n_members=n_members))
+
+    return g
+    
+

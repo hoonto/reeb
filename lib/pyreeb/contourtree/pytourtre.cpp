@@ -79,7 +79,7 @@ extern "C" void compute_contour_tree(
 	}
 
 	// print the vertices in order to debug
-	print_vertices(vertices);
+	// print_vertices(vertices);
 
 
 	std::vector<size_t> total_order;
