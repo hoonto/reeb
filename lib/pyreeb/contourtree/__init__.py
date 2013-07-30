@@ -100,6 +100,7 @@ def compute(neighbors, values):
             size_t num_vertices, \
             int ** neighbors, \
             int num_neighbors[], \
+            size_t * total_order, \
             double * values, \
             int * num_out_nodes, \
             int ** out_nodes, \
@@ -126,10 +127,15 @@ def compute(neighbors, values):
     out_nodes = ffi.new("int **")
     out_edges = ffi.new("int ***")
 
+    # sort the nodes by value in order to achieve a total ordering
+    total_order = sorted(range(len(values)), key=lambda n: values[n])
+
+    # compute the contour tree
     lib.compute_contour_tree(
         len(neighbors),
         arr_neighbors,
         number_of_neighbors,
+        total_order,
         values,
         num_out_nodes,
         out_nodes,

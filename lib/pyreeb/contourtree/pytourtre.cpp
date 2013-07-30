@@ -54,6 +54,7 @@ extern "C" void compute_contour_tree(
 		size_t num_vertices,
 		int ** neighbors,
 		int num_neighbors[],
+		size_t * total_order,
 		double * values,
 		int * num_out_nodes,
 		int ** out_nodes,
@@ -81,15 +82,9 @@ extern "C" void compute_contour_tree(
 	// print the vertices in order to debug
 	// print_vertices(vertices);
 
-
-	std::vector<size_t> total_order;
-	for (int i=0; i<num_vertices; i++){
-		total_order.push_back(i);
-	}
-
 	ctContext * ctx = ct_init(
 		num_vertices, //numVertices
-		&(total_order.front()), //totalOrder. Take the address of the front of an stl vector, which is the same as a C array
+		total_order, 
 		&get_value,
 		&get_neighbors,
 		&vertices //data for callbacks. The global functions less, value and neighbors are just wrappers which call mesh->getNeighbors, etc

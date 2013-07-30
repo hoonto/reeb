@@ -46,4 +46,5 @@ def kneighbors(data, k):
     neighbors.
     """
     nn = sklearn.neighbors.kneighbors_graph(data, k)
-    return [x.nonzero()[1].tolist() for x in nn]
+    nn = np.logical_or(nn.todense(),nn.todense().T)
+    return [x.nonzero()[1].tolist()[0] for x in nn]
