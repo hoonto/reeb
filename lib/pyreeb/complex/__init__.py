@@ -46,5 +46,12 @@ def kneighbors(data, k):
     neighbors.
     """
     nn = sklearn.neighbors.kneighbors_graph(data, k)
-    nn = np.logical_or(nn.todense(),nn.todense().T)
-    return [x.nonzero()[1].tolist()[0] for x in nn]
+    # get an array of u indices and v indices
+    u,v = np.nonzero(nn)
+    # and zip them together
+    edges = zip(u.tolist(), v.tolist())
+    # make a graph complex and return it
+    g = nx.Graph()
+    g.add_edges_from(edges)
+    g.remove_edges_from(g.selfloop_edges())
+    return g
