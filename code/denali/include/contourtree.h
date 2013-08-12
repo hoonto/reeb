@@ -1,0 +1,6 @@
+#ifndef CONTOURTREE_H_GUARD
+#define CONTOURTREE_H_GUARD
+
+
+
+#endif
