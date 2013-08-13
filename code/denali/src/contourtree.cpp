@@ -1,13 +1,7 @@
 #include <iostream>
-#include <vector>
-#include <map>
-#include <iterator>
-#include <string>
-#include <queue>
-#include "contourtree.h"
 #include "scalargraph.h"
-#include "disjointsetforest.h"
 
+/*
 void ContourTree::compute(ScalarGraph& sg) {
     // get the sorted nodes
     std::vector<int> order_to_node = sg.getSortedNodes();
@@ -119,3 +113,4 @@ void ContourTree::mergeTree(ScalarGraph& jt, ScalarGraph& st) {
         }
     }
 }
+*/

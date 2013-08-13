@@ -1,7 +1,24 @@
 #include "scalargraph.h"
-#include <algorithm>
-#include <iterator>
 
+void ScalarGraph::addNode(int id, double scalar_value) {
+    // create a node in the graph
+    Node n = g.addNode();
+    // map to this node internally
+    id_to_node[id] = n;
+    value[n] = scalar_value;
+}
+
+void ScalarGraph::addEdge(int x, int y) {
+    // get the nodes corresponding to x and y and add the edge
+    g.addEdge(id_to_node[x], id_to_node[y]);
+}
+
+double ScalarGraph::getValue(int id) {
+    return value[id_to_node[id]];
+}
+
+
+/*
 void ScalarGraph::addNode(int id, double value) {
     nodes[id] = ScalarGraphNode();  
     nodes[id].value = value;
@@ -62,3 +79,4 @@ void ScalarGraph::prettyPrint(std::ostream& os) {
 void ScalarGraph::clear() {
     nodes.clear();
 }
+*/

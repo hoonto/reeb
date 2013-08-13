@@ -1,8 +1,8 @@
 #ifndef CONTOURTREE_H_GUARD
 #define CONTOURTREE_H_GUARD
 #include <map>
-#include "scalargraph.h"
 
+/*
 class ContourTree : public ScalarGraph {
     public:
     void compute(ScalarGraph& sg);
@@ -13,5 +13,6 @@ class ContourTree : public ScalarGraph {
     ScalarGraph splitTree(ScalarGraph&, std::vector<int>&, std::map<int,int>&);
     void mergeTree(ScalarGraph&, ScalarGraph&);
 };
+*/
 
 #endif

@@ -1,10 +1,25 @@
 #ifndef SCALARGRAPH_H_GUARD
 #define SCALARGRAPH_H_GUARD
-#include <set>
+#include <lemon/list_graph.h>
 #include <map>
-#include <vector>
-#include <iostream>
 
+class ScalarGraph {
+private:
+    typedef lemon::ListGraph::Node Node;
+    typedef lemon::ListGraph::Arc Arc;
+    typedef lemon::ListGraph::Edge Edge;
+    lemon::ListGraph g;
+    lemon::ListGraph::NodeMap<double> value;
+    std::map<int,Node> id_to_node;
+public:
+    ScalarGraph() : value(g) { };
+    void addNode(int, double);
+    void addEdge(int, int);
+    double getValue(int);
+    std::list<int> neighbors(int);
+};
+
+/*
 class ScalarGraph {
 protected:
     class ScalarGraphNode {
@@ -37,5 +52,6 @@ public:
         std::map<int,ScalarGraphNode>& n;
     };
 };
+*/
 
 #endif

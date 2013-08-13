@@ -1,16 +1,8 @@
 #include <iostream>
-#include <algorithm>
-#include <iterator>
-#include <vector>
-#include "disjointsetforest.h"
 #include "scalargraph.h"
-#include "contourtree.h"
-
-using std::cout;
-using std::endl;
 
 int main() {
-    
+
     // make the scalar graph on pg. 390 of Wenger
     ScalarGraph g;
     const int nodevalues[] = {25, 62, 45, 66, 16, 32, 64, 39, 58, 51, 53, 30};
@@ -26,8 +18,12 @@ int main() {
         g.addEdge(edges[i][0], edges[i][1]);
     }
 
+    /*
     ContourTree ct;
     // compute the contour tree from the scalar graph (will sort inside function call)
     ct.compute(g);
+    std::cout << "It worjked.";
+    */
 
 }
+
