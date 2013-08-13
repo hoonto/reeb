@@ -19,7 +19,7 @@ int DisjointSetForest::findSet(int id) {
     return d.parent;
 }
 
-void DisjointSetForest::unionSets(int x, int y, bool x_less_than_y(int,int) ) {
+void DisjointSetForest::unionSets(int x, int y, std::map<int,int> enumeration) {
     /* Union two disjoint sets */
     // find the representative for each
     DisjointSet& d_x = id_to_set[x];
@@ -31,8 +31,8 @@ void DisjointSetForest::unionSets(int x, int y, bool x_less_than_y(int,int) ) {
     DisjointSet& rep_x = id_to_set[rep_x_id];
     DisjointSet& rep_y = id_to_set[rep_y_id];
 
-    int max_id = x_less_than_y(rep_x.max,rep_y.max) ? rep_y.max : rep_x.max;
-    int min_id = x_less_than_y(rep_x.min,rep_y.min) ? rep_x.min : rep_y.min;
+    int max_id = enumeration[rep_x.max] < enumeration[rep_y.max] ? rep_y.max : rep_x.max;
+    int min_id = enumeration[rep_x.min] < enumeration[rep_y.min] ? rep_x.min : rep_y.min;
 
     if (rep_x_id == rep_y_id) {
         return;

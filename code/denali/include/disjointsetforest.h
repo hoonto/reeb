@@ -16,7 +16,7 @@ public:
 
 public:
     void makeSet(int);
-    void unionSets(int,int,bool(int,int));
+    void unionSets(int,int,std::map<int,int>);
     int findSet(int);
     int maxSet(int);
     int minSet(int);

@@ -1,12 +1,12 @@
 #ifndef SCALARGRAPH_H_GUARD
 #define SCALARGRAPH_H_GUARD
-
 #include <set>
 #include <map>
 #include <vector>
+#include <iostream>
 
 class ScalarGraph {
-private:
+protected:
     class ScalarGraphNode {
     public:
         double value;
@@ -26,6 +26,8 @@ public:
     std::vector<int> getNodes();
     std::vector<std::pair<int,double> > getNodeValuePairs();
     std::vector<int> getSortedNodes();
+    void prettyPrint(std::ostream& os);
+    void clear();
 
     // A fancy way to sort the nodes
     struct node_sorting_functor {

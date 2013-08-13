@@ -1,5 +1,6 @@
 #include "scalargraph.h"
 #include <algorithm>
+#include <iterator>
 
 void ScalarGraph::addNode(int id, double value) {
     nodes[id] = ScalarGraphNode();  
@@ -44,4 +45,20 @@ std::vector<int> ScalarGraph::getSortedNodes() {
     std::vector<int> sorted_nodes = getNodes();
     std::sort(sorted_nodes.begin(), sorted_nodes.end(), ScalarGraph::node_sorting_functor(nodes));
     return sorted_nodes;
+}
+
+void ScalarGraph::prettyPrint(std::ostream& os) {
+    std::vector<int> nodes = getSortedNodes();
+    for (std::vector<int>::iterator it=nodes.begin(); it!=nodes.end(); ++it) {
+        os << "Node " << (*it) << std::endl;
+        os << "\tNeighbors: [ ";
+        std::set<int> nbrs = neighbors(*it);
+        std::copy(nbrs.begin(), nbrs.end(), std::ostream_iterator<int>(os, " "));
+        os << "]" << std::endl;
+        os << "\tValue: " << getValue(*it) << std::endl;
+    }
+}
+
+void ScalarGraph::clear() {
+    nodes.clear();
 }
