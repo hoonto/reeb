@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <iterator>
-#include "scalargraph.h"
+#include "scalartree.h"
 
 
-void ScalarGraph::addNode(NodeID id, double scalar_value) {
+void ScalarTree::addNode(NodeID id, double scalar_value) {
     // create a node in the graph
     Node n = g.addNode();
     value[n] = scalar_value;
@@ -13,7 +13,7 @@ void ScalarGraph::addNode(NodeID id, double scalar_value) {
 }
 
 
-double ScalarGraph::removeNode(NodeID id) {
+double ScalarTree::removeNode(NodeID id) {
     double node_value = value[id_to_node[id]];
     // remove the node from the graph
     g.erase(id_to_node[id]);
@@ -22,40 +22,27 @@ double ScalarGraph::removeNode(NodeID id) {
     return node_value;
 }
 
-void ScalarGraph::addEdge(NodeID x, NodeID y) {
+
+void ScalarTree::addEdge(NodeID x, NodeID y) {
     // get the nodes corresponding to x and y and add the edge
-    g.addEdge(id_to_node[x], id_to_node[y]);
+    g.addArc(id_to_node[x], id_to_node[y]);
 }
 
 
-void ScalarGraph::removeEdge(NodeID x, NodeID y) {
-    Edge e = lemon::findEdge(g, id_to_node[x], id_to_node[y]);
-    g.erase(e);
+void ScalarTree::removeEdge(NodeID x, NodeID y) {
+    Arc a = lemon::findArc(g, id_to_node[x], id_to_node[y]);
+    g.erase(a);
 }
 
 
-double ScalarGraph::getValue(NodeID id) {
+double ScalarTree::getValue(NodeID id) {
     return value[id_to_node[id]];
 }
 
 
-unsigned int ScalarGraph::getNumberOfNeighbors(NodeID id) {
-    return lemon::countIncEdges(g, id_to_node[id]);
-}
-
-
-std::list<NodeID> ScalarGraph::getNeighbors(NodeID id) {
-    std::list<NodeID> neighbors;
-    for (lemon::ListGraph::IncEdgeIt e(g, id_to_node[id]); e!=lemon::INVALID; ++e) {
-        neighbors.push_back(node_to_id[g.oppositeNode(id_to_node[id], e)]);
-    }
-    return neighbors;
-}
-
-
-std::list<NodeID> ScalarGraph::getNodes() {
+std::list<NodeID> ScalarTree::getNodes() {
     std::list<NodeID> nodes;
-    for (lemon::ListGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
+    for (lemon::ListDigraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
         nodes.push_back(node_to_id[n]);
     }
     return nodes;
@@ -64,14 +51,14 @@ std::list<NodeID> ScalarGraph::getNodes() {
 
 struct node_sorter {
 private:
-    ScalarGraph* g;
+    ScalarTree* g;
 public:
-    node_sorter(ScalarGraph* x) {g=x;}
+    node_sorter(ScalarTree* x) {g=x;}
     bool operator()(NodeID x, NodeID y) { return g->getValue(x) < g->getValue(y); }
 };
 
 
-std::list<NodeID> ScalarGraph::getSortedNodes() {
+std::list<NodeID> ScalarTree::getSortedNodes() {
     // first we get the nodes
     std::list<NodeID> nodes = getNodes();
     // in order to sort the nodes, we need to use a functor that contains values
@@ -80,8 +67,9 @@ std::list<NodeID> ScalarGraph::getSortedNodes() {
 }
 
 
-void ScalarGraph::prettyPrint(std::ostream& os) {
-    for (lemon::ListGraph::NodeIt v(g); v!=lemon::INVALID; ++v) {
+/*
+void ScalarTree::prettyPrint(std::ostream& os) {
+    for (lemon::ListDigraph::NodeIt v(g); v!=lemon::INVALID; ++v) {
         os << "Node " << node_to_id[v] << std::endl;
         os << "\tValue: " << value[v] << std::endl;
         os << "\tNeighbors: [ ";
@@ -90,4 +78,4 @@ void ScalarGraph::prettyPrint(std::ostream& os) {
         os << "]" << std::endl;
     }
 }
-
+*/
