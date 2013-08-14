@@ -2,6 +2,7 @@
 #define SCALARGRAPH_H_GUARD
 #include <lemon/list_graph.h>
 #include <map>
+#include <vector>
 #include <iostream>
 #include "common.h"
 
@@ -23,9 +24,10 @@ public:
     double getValue(NodeID);
     std::list<NodeID> getNeighbors(NodeID);
     unsigned int getNumberOfNeighbors(NodeID);
-    std::list<NodeID> getNodes();
-    std::list<NodeID> getSortedNodes();
+    std::vector<NodeID> getNodes();
+    std::vector<NodeID> getSortedNodes();
     void prettyPrint(std::ostream& os);
+    void clear();
 };
 
 #endif

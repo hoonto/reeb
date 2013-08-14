@@ -1,25 +1,25 @@
 #ifndef DISJOINTSETFOREST_H_GUARD
 #define DISJOINTSETFOREST_H_GUARD
-
 #include <map>
+#include "common.h"
 
 class DisjointSetForest {
 public:
     struct DisjointSet {
-        int parent;
-        int rank;
-        int max;
-        int min;
+        NodeID parent;
+        NodeID rank;
+        NodeID max;
+        NodeID min;
     };
 
-    std::map<int,DisjointSet> id_to_set;
+    std::map<NodeID,DisjointSet> id_to_set;
 
 public:
-    void makeSet(int);
-    void unionSets(int,int,std::map<int,int>);
-    int findSet(int);
-    int maxSet(int);
-    int minSet(int);
+    void makeSet(NodeID);
+    void unionSets(NodeID,NodeID,std::map<NodeID,NodeID>);
+    NodeID findSet(NodeID);
+    NodeID maxSet(NodeID);
+    NodeID minSet(NodeID);
 };
 
 #endif

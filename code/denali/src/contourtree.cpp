@@ -1,116 +1,152 @@
-#include <iostream>
-#include "scalargraph.h"
+#include <map>
+#include <vector>
+#include <queue>
+#include "scalartree.h"
+#include "contourtree.h"
+#include "disjointsetforest.h"
+#include "common.h"
 
-/*
+
 void ContourTree::compute(ScalarGraph& sg) {
     // get the sorted nodes
-    std::vector<int> order_to_node = sg.getSortedNodes();
+    std::vector<NodeID> order_to_id = sg.getSortedNodes();
 
-    // establish a mapping from the node id to position in the enumeration
-    std::map<int,int> node_to_order;
-    for (int i=0; i<order_to_node.size(); ++i) {
-        node_to_order[order_to_node[i]] = i;
+    // make the reverse mapping from id to order
+    std::map<NodeID,NodeID> id_to_order;
+    for (NodeID order=0; order<order_to_id.size(); ++order) {
+        id_to_order[order_to_id[order]] = order;
     }
 
-    ScalarGraph join_tree = joinTree(sg, order_to_node, node_to_order);
-    ScalarGraph split_tree = splitTree(sg, order_to_node, node_to_order);
-
-    mergeTree(join_tree, split_tree);
-
+    computeJoinTree(sg, order_to_id, id_to_order);
+    computeSplitTree(sg, order_to_id, id_to_order);
+    mergeTrees();
 }
 
-void ContourTree::addEdge(int x, int y) {
-    // add edge from x to y
-    nodes[x].neighbors.insert(y);
-}
 
-ScalarGraph ContourTree::joinTree(ScalarGraph& sg, std::vector<int>& order_to_node, std::map<int,int>& node_to_order) {
-    ContourTree tree;
+void ContourTree::computeJoinTree(ScalarGraph& sg, std::vector<NodeID>& order_to_id, std::map<NodeID,NodeID>& id_to_order) {
+    join_tree.clear();
     DisjointSetForest forest;
 
-    // iterate through all of the vertices from least to greatest
-    for (std::vector<int>::iterator it_i=order_to_node.begin(); it_i!=order_to_node.end(); ++it_i) {
-        int vi = *it_i;
-        tree.addNode(vi, sg.getValue(vi));
+    // iterate through the vertices in ascending order
+    for (std::vector<NodeID>::iterator it_i=order_to_id.begin(); it_i!=order_to_id.end(); ++it_i) {
+        NodeID vi = *it_i;
+        join_tree.addNode(vi, sg.getValue(vi));
         forest.makeSet(vi);
 
-        // iterate through the neighbors
-        std::set<int> nbrs = sg.neighbors(vi);
-        for (std::set<int>::iterator it_j=nbrs.begin(); it_j!=nbrs.end(); ++it_j) {
-            int vj = *it_j;
-            int i = node_to_order[vi];
-            int j = node_to_order[vj];
-            int set_i = forest.findSet(vi);
-            int set_j = forest.findSet(vj);
+        // iterate through each of the neighbors
+        std::list<NodeID> neighbors = sg.getNeighbors(vi);
+        for (std::list<NodeID>::iterator it_j=neighbors.begin(); it_j!=neighbors.end(); ++it_j) {
+            // obtain the node's ID
+            NodeID vj = *it_j;
+            // get the position of the nodes in the ordering
+            NodeID i = id_to_order[vi]; 
+            NodeID j = id_to_order[vj];
+            // get the representative ids of each set
+            NodeID rep_i = forest.findSet(vi); 
+            NodeID rep_j = forest.findSet(vj);
 
-            if (j<i && set_i!=set_j) {
-                int k = 0;
-                int vk = 0;
-                vk = forest.maxSet(vj);
-                tree.addEdge(vi,vk);
-                forest.unionSets(vi,vj,node_to_order);
+            if (j<i && rep_i!=rep_j) {
+                // get the max member of the set containing vj
+                NodeID vk = forest.maxSet(vj);
+                // make vk the parent of vj in the join tree
+                join_tree.addEdge(vi,vk);
+                // union the sets
+                forest.unionSets(vi,vj,id_to_order);
             }
         }
     }
-
-    return tree;
 }
 
-ScalarGraph ContourTree::splitTree(ScalarGraph& sg, std::vector<int>& order_to_node, std::map<int,int>& node_to_order) {
-    ContourTree tree;
+
+void ContourTree::computeSplitTree(ScalarGraph& sg, std::vector<NodeID>& order_to_id, std::map<NodeID,NodeID>& id_to_order) {
+    split_tree.clear();
     DisjointSetForest forest;
 
-    // iterate through all of the vertices from least to greatest
-    for (std::vector<int>::reverse_iterator it_i=order_to_node.rbegin(); it_i!=order_to_node.rend(); ++it_i) {
-        int vi = *it_i;
-        tree.addNode(vi, sg.getValue(vi));
+    // iterate through the vertices in reverse order
+    for (std::vector<NodeID>::reverse_iterator it_i=order_to_id.rbegin(); it_i!=order_to_id.rend(); ++it_i) {
+        NodeID vi = *it_i;
+        split_tree.addNode(vi, sg.getValue(vi));
         forest.makeSet(vi);
 
-        // iterate through the neighbors
-        std::set<int> nbrs = sg.neighbors(vi);
-        for (std::set<int>::iterator it_j=nbrs.begin(); it_j!=nbrs.end(); ++it_j) {
-            int vj = *it_j;
-            int i = node_to_order[vi];
-            int j = node_to_order[vj];
-            int set_i = forest.findSet(vi);
-            int set_j = forest.findSet(vj);
+        // iterate through each of the neighbors
+        std::list<NodeID> neighbors = sg.getNeighbors(vi);
+        for (std::list<NodeID>::iterator it_j=neighbors.begin(); it_j!=neighbors.end(); ++it_j) {
+            // obtain the node's ID
+            NodeID vj = *it_j;
+            // get the position of the nodes in the ordering
+            NodeID i = id_to_order[vi]; 
+            NodeID j = id_to_order[vj];
+            // get the representative ids of each set
+            NodeID rep_i = forest.findSet(vi); 
+            NodeID rep_j = forest.findSet(vj);
 
-            if (j>i && set_i!=set_j) {
-                int k = 0;
-                int vk = 0;
-                vk = forest.minSet(vj);
-                tree.addEdge(vi,vk);
-                forest.unionSets(vi,vj,node_to_order);
+            if (j>i && rep_i!=rep_j) {
+                // get the max member of the set containing vj
+                NodeID vk = forest.minSet(vj);
+                // make vk the parent of vj in the join tree
+                split_tree.addEdge(vi,vk);
+                // union the sets
+                forest.unionSets(vi,vj,id_to_order);
             }
         }
     }
-
-    return tree;
 }
 
-void ContourTree::mergeTree(ScalarGraph& jt, ScalarGraph& st) {
-    // clear self
-    this->clear();
 
-    std::queue<int> q;
-    
-    // add every node to the contour tree
-    std::vector<int> nodes = jt.getNodes();
-    for (std::vector<int>::iterator it=nodes.begin(); it!=nodes.end(); ++it) {
-        int vi = *it;
-        addNode(vi, jt.getValue(vi));
-        if (jt.neighbors(vi).size() + st.neighbors(vi).size() == 1) {
-            q.push(vi);
-        }
+void ContourTree::mergeTrees() {
+    std::vector<NodeID> nodes = join_tree.getNodes();  
+    std::queue<NodeID> merge_queue;
+
+    // initialize the tree with vertices and add to the merge queue
+    for (std::vector<NodeID>::iterator it=nodes.begin(); it!=nodes.end(); ++it) {
+        NodeID ai = *it;
+        // create the vertex in the contour tree
+        addNode(ai, join_tree.getValue(ai));
+        if (join_tree.getNumberOfChildren(ai) + split_tree.getNumberOfChildren(ai) == 1)
+            merge_queue.push(ai);
     }
 
-    while (q.size() > 1) {
-        int vi = q.front();
-        q.pop();
-
-        if (jt.neighbors(vi).size() == 0) {
-            int vk =  
+    while (merge_queue.size()>1) {
+        // get the value at the front of the queue
+        NodeID& vi = merge_queue.front();
+        
+        if (join_tree.getNumberOfChildren(vi) == 0) {
+            // get the predecessor of this node in the join tree
+            NodeID vk = join_tree.getPredecessors(vi).front();
+            // make vk the parent of vi in the contour tree
+            addEdge(vk,vi);
+            // delete the node from the join tree
+            join_tree.removeNode(vi);
+            // connect vi's parent to vi's child in the split tree
+            if (split_tree.getNumberOfPredecessors(vi) > 0) {
+                NodeID split_predecessor = split_tree.getPredecessors(vi).front();
+                NodeID split_child = split_tree.getChildren(vi).front();
+                split_tree.addEdge(split_predecessor, split_child);
+            }
+            split_tree.removeNode(vi);
+            // add to the queue if necessary
+            if (join_tree.getNumberOfChildren(vk) + split_tree.getNumberOfChildren(vk) == 1) {
+                merge_queue.push(vk);
+            }
+        } else {
+            // get the predecessor of this node in the join tree
+            NodeID vk = split_tree.getPredecessors(vi).front();
+            // make vk the parent of vi in the contour tree
+            addEdge(vk,vi);
+            // delete the node from the join tree
+            split_tree.removeNode(vi);
+            // connect vi's parent to vi's child in the split tree
+            if (join_tree.getNumberOfPredecessors(vi) > 0) {
+                NodeID join_predecessor = join_tree.getPredecessors(vi).front();
+                NodeID join_child = join_tree.getChildren(vi).front();
+                join_tree.addEdge(join_predecessor, join_child);
+            }
+            join_tree.removeNode(vi);
+            // add to the queue if necessary
+            if (join_tree.getNumberOfChildren(vk) + split_tree.getNumberOfChildren(vk) == 1) {
+                merge_queue.push(vk);
+            }
         }
+        merge_queue.pop();
     }
 }
-*/

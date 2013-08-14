@@ -22,6 +22,7 @@ double ScalarGraph::removeNode(NodeID id) {
     return node_value;
 }
 
+
 void ScalarGraph::addEdge(NodeID x, NodeID y) {
     // get the nodes corresponding to x and y and add the edge
     g.addEdge(id_to_node[x], id_to_node[y]);
@@ -53,8 +54,8 @@ std::list<NodeID> ScalarGraph::getNeighbors(NodeID id) {
 }
 
 
-std::list<NodeID> ScalarGraph::getNodes() {
-    std::list<NodeID> nodes;
+std::vector<NodeID> ScalarGraph::getNodes() {
+    std::vector<NodeID> nodes;
     for (lemon::ListGraph::NodeIt n(g); n!=lemon::INVALID; ++n) {
         nodes.push_back(node_to_id[n]);
     }
@@ -71,11 +72,11 @@ public:
 };
 
 
-std::list<NodeID> ScalarGraph::getSortedNodes() {
+std::vector<NodeID> ScalarGraph::getSortedNodes() {
     // first we get the nodes
-    std::list<NodeID> nodes = getNodes();
+    std::vector<NodeID> nodes = getNodes();
     // in order to sort the nodes, we need to use a functor that contains values
-    nodes.sort(node_sorter(this));
+    std::sort(nodes.begin(), nodes.end(), node_sorter(this));
     return nodes;
 }
 
@@ -91,3 +92,7 @@ void ScalarGraph::prettyPrint(std::ostream& os) {
     }
 }
 
+void ScalarGraph::clear() {
+    g.clear();
+    id_to_node.clear();
+}

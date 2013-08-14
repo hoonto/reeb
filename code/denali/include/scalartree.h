@@ -2,6 +2,7 @@
 #define SCALARTREE_H_GUARD
 #include <lemon/list_graph.h>
 #include <map>
+#include <vector>
 #include <iostream>
 #include "common.h"
 
@@ -27,9 +28,10 @@ public:
     unsigned int getNumberOfNeighbors(NodeID);
     unsigned int getNumberOfChildren(NodeID);
     unsigned int getNumberOfPredecessors(NodeID);
-    std::list<NodeID> getNodes();
-    std::list<NodeID> getSortedNodes();
+    std::vector<NodeID> getNodes();
+    std::vector<NodeID> getSortedNodes();
     void prettyPrint(std::ostream& os);
+    void clear();
 };
 
 #endif

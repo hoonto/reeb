@@ -1,5 +1,7 @@
 #include <iostream>
 #include "scalargraph.h"
+#include "scalartree.h"
+#include "contourtree.h"
 
 int main() {
 
@@ -18,8 +20,10 @@ int main() {
         g.addEdge(edges[i][0], edges[i][1]);
     }
 
-    /*
     ContourTree ct;
+    ct.compute(g);
+    ct.prettyPrint(std::cout);
+    /*
     // compute the contour tree from the scalar graph (will sort inside function call)
     ct.compute(g);
     std::cout << "It worjked.";
