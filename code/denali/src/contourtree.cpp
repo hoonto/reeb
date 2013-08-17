@@ -1,6 +1,8 @@
 #include <map>
 #include <vector>
 #include <queue>
+#include <list>
+#include <iterator>
 #include "scalargraph.h"
 #include "contourtree.h"
 #include "disjointsetforest.h"
@@ -174,5 +176,67 @@ void denali::computeContourTree(ScalarGraph& plex, ScalarGraph& contour_tree) {
 
 
 void denali::removeRegularVertices(ScalarGraph& sg) {
-    
+    std::vector<NodeID> nodes = sg.getNodes();    
+    std::list<NodeID> regular_nodes;
+
+    for (std::vector<NodeID>::iterator it=nodes.begin(); it!=nodes.end(); ++it) {
+        if (isRegularNode(sg, *it)) {
+            regular_nodes.push_back(*it);
+        }
+    }
+
+    for (std::list<NodeID>::iterator it=regular_nodes.begin(); it!=regular_nodes.end(); ++it) {
+
+        std::list<NodeID> neighbors = sg.getNeighbors(*it);
+
+        // get the two neighbor node ids
+        std::list<NodeID>::iterator neighbor = neighbors.begin();
+        NodeID n1 = (*neighbor);
+        neighbor++;
+        NodeID n2 = (*neighbor);
+
+        // get their members
+        std::set<NodeID> m1 = sg.edgeMembers(n1, *it);
+        std::set<NodeID> m2 = sg.edgeMembers(n2, *it);
+
+        // union the members
+        std::set<NodeID> members;
+        members.insert(m1.begin(), m1.end());
+        members.insert(m2.begin(), m2.end());
+
+        // connect the other two nodes
+        sg.addEdge(n1, n2);
+
+        // delete the middle node
+        sg.removeNode(*it);
+
+        // update the new edge's members
+        sg.edgeMembers(n1, n2) = members;
+
+    }
+
 }
+
+
+bool denali::isRegularNode(ScalarGraph& g, NodeID u) {
+    // Checks to see if a node u in g is regular (does it have exactly one
+    // neighbors that is less than it, and one that is greater?
+    unsigned int n_lesser = 0;
+    unsigned int n_greater = 0;
+    double u_height = g.getValue(u);
+
+    std::list<NodeID> neighbors = g.getNeighbors(u);
+    for (std::list<NodeID>::iterator it=neighbors.begin(); it!=neighbors.end(); ++it) {
+        NodeID v = (*it);
+        double v_height = g.getValue(v);
+        
+        if (v_height > u_height) {
+            n_greater++;
+        } else {
+            n_lesser++;
+        }
+    }
+
+    return n_greater==1 && n_lesser==1;
+}
+        

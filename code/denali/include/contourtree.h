@@ -7,6 +7,7 @@ namespace denali {
 void computeAugmentedContourTree(ScalarGraph&, ScalarGraph&);
 void computeContourTree(ScalarGraph&, ScalarGraph&);
 void removeRegularVertices(ScalarGraph&);
+bool isRegularNode(ScalarGraph&, NodeID);
 }
 
 #endif

@@ -51,19 +51,12 @@ void ScalarGraph::removeEdge(NodeID x, NodeID y) {
 }
 
 
-double ScalarGraph::getEdgeWeight(NodeID x, NodeID y) {
+std::set<NodeID>& ScalarGraph::edgeMembers(NodeID x, NodeID y) {
     Arc e = lemon::findArc(g, id_to_node[x], id_to_node[y]);
     if (e == lemon::INVALID)
         e = lemon::findArc(g, id_to_node[y], id_to_node[x]);
-    return edge_weight[e];
-}
 
-
-void ScalarGraph::setEdgeWeight(NodeID x, NodeID y, double value) {
-    Arc e = lemon::findArc(g, id_to_node[x], id_to_node[y]);
-    if (e == lemon::INVALID)
-        e = lemon::findArc(g, id_to_node[y], id_to_node[x]);
-    edge_weight[e] = value;
+    return edge_members[e];
 }
 
 

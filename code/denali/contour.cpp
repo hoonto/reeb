@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iterator>
+#include <string>
 #include "scalargraph.h"
 #include "contourtree.h"
 
@@ -21,8 +22,15 @@ int main() {
         g.addEdge(edges[i][0], edges[i][1]);
     }
 
+    ScalarGraph act;
     ScalarGraph ct;
+    denali::computeAugmentedContourTree(g,act);
     denali::computeContourTree(g,ct);
+
+    act.prettyPrint(std::cout);
+    std::cout << std::endl << std::string(80, '=') << "\n\n";
+    ct.prettyPrint(std::cout);
+
 
 }
 
