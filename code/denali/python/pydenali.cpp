@@ -18,7 +18,7 @@ extern "C" void computeContourTree(
         plex.addEdge(edges[i][0], edges[i][1]);
     }
 
-    ContourTree ct;
-    ct.compute(plex);
+    ScalarGraph ct;
+    computeContourTree(plex, ct);
 
 }

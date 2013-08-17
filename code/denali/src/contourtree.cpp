@@ -1,29 +1,15 @@
 #include <map>
 #include <vector>
 #include <queue>
-#include "scalartree.h"
+#include "scalargraph.h"
 #include "contourtree.h"
 #include "disjointsetforest.h"
 #include "common.h"
 
 
-void ContourTree::compute(ScalarGraph& sg) {
-    // get the sorted nodes
-    std::vector<NodeID> order_to_id = sg.getSortedNodes();
-
-    // make the reverse mapping from id to order
-    std::map<NodeID,NodeID> id_to_order;
-    for (NodeID order=0; order<order_to_id.size(); ++order) {
-        id_to_order[order_to_id[order]] = order;
-    }
-
-    computeJoinTree(sg, order_to_id, id_to_order);
-    computeSplitTree(sg, order_to_id, id_to_order);
-    mergeTrees();
-}
-
-
-void ContourTree::computeJoinTree(ScalarGraph& sg, std::vector<NodeID>& order_to_id, std::map<NodeID,NodeID>& id_to_order) {
+namespace {
+void computeJoinTree(ScalarGraph& sg, ScalarGraph& join_tree, 
+        std::vector<NodeID>& order_to_id, std::map<NodeID,NodeID>& id_to_order) {
     join_tree.clear();
     DisjointSetForest forest;
 
@@ -32,7 +18,7 @@ void ContourTree::computeJoinTree(ScalarGraph& sg, std::vector<NodeID>& order_to
         NodeID vi = *it_i;
         join_tree.addNode(vi, sg.getValue(vi));
         forest.makeSet(vi);
-
+        
         // iterate through each of the neighbors
         std::list<NodeID> neighbors = sg.getNeighbors(vi);
         for (std::list<NodeID>::iterator it_j=neighbors.begin(); it_j!=neighbors.end(); ++it_j) {
@@ -44,7 +30,7 @@ void ContourTree::computeJoinTree(ScalarGraph& sg, std::vector<NodeID>& order_to
             // get the representative ids of each set
             NodeID rep_i = forest.findSet(vi); 
             NodeID rep_j = forest.findSet(vj);
-
+            
             if (j<i && rep_i!=rep_j) {
                 // get the max member of the set containing vj
                 NodeID vk = forest.maxSet(vj);
@@ -53,12 +39,16 @@ void ContourTree::computeJoinTree(ScalarGraph& sg, std::vector<NodeID>& order_to
                 // union the sets
                 forest.unionSets(vi,vj,id_to_order);
             }
+            
         }
     }
 }
+}
 
 
-void ContourTree::computeSplitTree(ScalarGraph& sg, std::vector<NodeID>& order_to_id, std::map<NodeID,NodeID>& id_to_order) {
+namespace {
+void computeSplitTree(ScalarGraph& sg, ScalarGraph& split_tree,
+        std::vector<NodeID>& order_to_id, std::map<NodeID,NodeID>& id_to_order) {
     split_tree.clear();
     DisjointSetForest forest;
 
@@ -93,7 +83,8 @@ void ContourTree::computeSplitTree(ScalarGraph& sg, std::vector<NodeID>& order_t
 }
 
 
-void ContourTree::mergeTrees() {
+void mergeTrees(ScalarGraph& join_tree, ScalarGraph& split_tree, ScalarGraph& contour_tree) {
+    contour_tree.clear();
     std::vector<NodeID> nodes = join_tree.getNodes();  
     std::queue<NodeID> merge_queue;
 
@@ -101,7 +92,7 @@ void ContourTree::mergeTrees() {
     for (std::vector<NodeID>::iterator it=nodes.begin(); it!=nodes.end(); ++it) {
         NodeID ai = *it;
         // create the vertex in the contour tree
-        addNode(ai, join_tree.getValue(ai));
+        contour_tree.addNode(ai, join_tree.getValue(ai));
         if (join_tree.getNumberOfChildren(ai) + split_tree.getNumberOfChildren(ai) == 1)
             merge_queue.push(ai);
     }
@@ -114,7 +105,7 @@ void ContourTree::mergeTrees() {
             // get the predecessor of this node in the join tree
             NodeID vk = join_tree.getPredecessors(vi).front();
             // make vk the parent of vi in the contour tree
-            addEdge(vk,vi);
+            contour_tree.addEdge(vk,vi);
             // delete the node from the join tree
             join_tree.removeNode(vi);
             // connect vi's parent to vi's child in the split tree
@@ -132,7 +123,7 @@ void ContourTree::mergeTrees() {
             // get the predecessor of this node in the join tree
             NodeID vk = split_tree.getPredecessors(vi).front();
             // make vk the parent of vi in the contour tree
-            addEdge(vk,vi);
+            contour_tree.addEdge(vk,vi);
             // delete the node from the join tree
             split_tree.removeNode(vi);
             // connect vi's parent to vi's child in the split tree
@@ -149,4 +140,39 @@ void ContourTree::mergeTrees() {
         }
         merge_queue.pop();
     }
+}
+}
+
+
+void denali::computeAugmentedContourTree(ScalarGraph& plex, ScalarGraph& contour_tree) {
+    
+    // get the sorted nodes
+    std::vector<NodeID> order_to_id = plex.getSortedNodes();
+
+    // make the reverse mapping from id to order
+    std::map<NodeID,NodeID> id_to_order;
+    for (NodeID order=0; order<order_to_id.size(); ++order) {
+        id_to_order[order_to_id[order]] = order;
+    }
+
+    ScalarGraph join_tree, split_tree;
+    computeJoinTree(plex, join_tree, order_to_id, id_to_order);
+    computeSplitTree(plex, split_tree, order_to_id, id_to_order);
+    mergeTrees(join_tree, split_tree, contour_tree);
+}
+
+
+void denali::computeContourTree(ScalarGraph& plex, ScalarGraph& contour_tree) {
+
+    // first compute the augmented contour tree
+    denali::computeAugmentedContourTree(plex, contour_tree);
+
+    // now remove the regular vertices
+    denali::removeRegularVertices(contour_tree);
+    
+}
+
+
+void denali::removeRegularVertices(ScalarGraph& sg) {
+    
 }

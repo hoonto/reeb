@@ -3,26 +3,23 @@ IDIR = ./include
 ODIR = ./build
 SDIR = ./src
 LEMONFLAGS = -Ideps/lemon/include -Ldeps/lemon/lib -lemon
-CFLAGS = -I$(IDIR) $(LEMONFLAGS)
+CFLAGS = -I$(IDIR) $(LEMONFLAGS) -ggdb
 COMMONDEPS = $(IDIR)/common.h
 
-all: contour
+all:
+	echo "Nothing to do..."
 
-contour: contour.cpp $(ODIR)/scalargraph.o $(ODIR)/scalartree.o \
-$(ODIR)/disjointsetforest.o $(ODIR)/contourtree.o
-	$(CC) $(CFLAGS) $(ODIR)/*.o contour.cpp -o main
+contour: contour.cpp scalargraph contourtree
+	$(CC) $(CFLAGS) $(ODIR)/*.o contour.cpp -o contour
 
-$(ODIR)/scalargraph.o: $(SDIR)/scalargraph.cpp $(COMMONDEPS)
+scalargraph: $(SDIR)/scalargraph.cpp $(IDIR)/scalargraph.h $(COMMONDEPS)
 	$(CC) $(CFLAGS) $(SDIR)/scalargraph.cpp -c -o $(ODIR)/scalargraph.o
 
-$(ODIR)/scalartree.o: $(SDIR)/scalartree.cpp $(COMMONDEPS)
-	$(CC) $(CFLAGS) $(SDIR)/scalartree.cpp -c -o $(ODIR)/scalartree.o
-
-$(ODIR)/disjointsetforest.o: $(SDIR)/disjointsetforest.cpp $(COMMONDEPS)
-	$(CC) $(CFLAGS) $(SDIR)/disjointsetforest.cpp -c -o $(ODIR)/disjointsetforest.o
-
-$(ODIR)/contourtree.o: $(SDIR)/contourtree.cpp $(COMMONDEPS)
+contourtree: $(SDIR)/contourtree.cpp $(IDIR)/contourtree.h scalargraph disjointsetforest $(COMMONDEPS)
 	$(CC) $(CFLAGS) $(SDIR)/contourtree.cpp -c -o $(ODIR)/contourtree.o
+
+disjointsetforest: $(SDIR)/disjointsetforest.cpp $(IDIR)/disjointsetforest.h $(COMMONDEPS)
+	$(CC) $(CFLAGS) $(SDIR)/disjointsetforest.cpp -c -o $(ODIR)/disjointsetforest.o
 
 clean:
 	rm $(ODIR)/*.o
