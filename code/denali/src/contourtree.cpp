@@ -2,6 +2,7 @@
 #include <vector>
 #include <queue>
 #include <list>
+#include <stdexcept>
 #include <iterator>
 #include "scalargraph.h"
 #include "contourtree.h"
@@ -193,13 +194,16 @@ void ContourTree::removeRegularVertices() {
         NodeID n2 = (*neighbor);
 
         // get their members
-        std::set<NodeID> m1 = contour_tree.edgeMembers(n1, *it);
-        std::set<NodeID> m2 = contour_tree.edgeMembers(n2, *it);
+        std::set<NodeID> m1 = edge_members[Edge(n1,*it)];
+        std::set<NodeID> m2 = edge_members[Edge(n2,*it)];
 
         // union the members
         std::set<NodeID> members;
         members.insert(m1.begin(), m1.end());
         members.insert(m2.begin(), m2.end());
+
+        // add the to-be-deleted middle node to the set
+        members.insert(*it);
 
         // connect the other two nodes
         contour_tree.addEdge(n1, n2);
@@ -207,11 +211,13 @@ void ContourTree::removeRegularVertices() {
         // delete the middle node
         contour_tree.removeNode(*it);
 
+        // remove the other edges from the edge_member map
+        edge_members.erase(Edge(n1, *it));
+        edge_members.erase(Edge(n2, *it));
+
         // update the new edge's members
-        contour_tree.edgeMembers(n1, n2) = members;
-
+        edge_members[Edge(n1, n2)] = members;
     }
-
 }
 
 
@@ -238,16 +244,81 @@ bool ContourTree::isRegularNode(NodeID u) {
 }
 
 
-std::ostream& ContourTree::prettyPrint(std::ostream& os) {
-    return contour_tree.prettyPrint(os);
-}
-
-
 bool ContourTree::isRooted() {
     return is_rooted;
 }
 
 
-void ContourTree::chooseRoot(NodeID root) {
+void ContourTree::setRoot(NodeID new_root) {
+    // Given a root node ID, changes the directions of the edges
+    // in the contour tree so that it is rooted with 'root' as the root.
+    
+    is_rooted = true;
+    root = new_root;
 
+    // compute the predecessor map from a DFS
+    std::map<NodeID,NodeID> pm = contour_tree.dfsPredecessorMap(root);
+
+    // now we loop through every node in the graph and direct it towards 
+    // its predecessor
+    for (std::map<NodeID,NodeID>::iterator it=pm.begin(); it!=pm.end(); ++it) {
+        NodeID this_node = (*it).first;
+        NodeID predecessor = (*it).second;
+        // check to make sure we aren't at the root, then switch the direction
+        if (this_node != root)
+            contour_tree.addEdge(predecessor, this_node);
+    }
+
+    // update the total edge and node weights
+    updateTotalWeights(root);
+}
+
+
+NodeID ContourTree::getRoot() {
+    if (!is_rooted) throw std::runtime_error("Cannot find the root of an unrooted tree.");
+    return root;
+}
+
+
+unsigned int ContourTree::edgeWeight(NodeID x, NodeID y) {
+    return edge_members[Edge(x,y)].size();
+}
+
+
+void ContourTree::updateTotalWeights(NodeID u) {
+    // if this is a root, the total weight is zero
+    total_node_weight[u] = 0;
+
+    if (contour_tree.getNumberOfChildren(u)!=0) {
+        // we are going to recursively calculate the weight for
+        // each of the children nodes and arcs
+        std::list<NodeID> children = contour_tree.getChildren(u);
+        for (std::list<NodeID>::iterator child=children.begin(); 
+                child!=children.end(); ++child) {
+
+            // update the total weight of this child
+            updateTotalWeights(*child);
+
+            // update the total weight of the arc connected to this child
+            Edge arc(u,*child);
+            total_edge_weight[arc] = edgeWeight(u,*child) + 
+                total_node_weight[*child] + 1;
+
+            // add this to the current node's total weight
+            total_node_weight[u] += total_edge_weight[arc];
+        }
+    }
+}
+
+
+unsigned int ContourTree::totalNodeWeight(NodeID id) {
+    if (!is_rooted) throw std::runtime_error("Tree is not rooted!");
+    return total_node_weight[id];
+}
+
+
+unsigned int ContourTree::totalEdgeWeight(NodeID x, NodeID y) {
+    if (!is_rooted) throw std::runtime_error("Tree is not rooted!");
+    Edge p(x,y);
+    return total_edge_weight[p];
 }

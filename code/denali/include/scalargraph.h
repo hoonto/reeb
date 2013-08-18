@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 #include "common.h"
 
 
@@ -16,11 +17,9 @@ private:
     lemon::ListDigraph::NodeMap<double> value;
     lemon::ListDigraph::NodeMap<NodeID> node_to_id;
     std::map<NodeID,Node> id_to_node;
-    lemon::ListDigraph::ArcMap<std::set<NodeID> > edge_members;
 public:
     ScalarGraph() : 
-        value(g), node_to_id(g), edge_members(g) { };
-
+        value(g), node_to_id(g) { };
 
     void addNode(NodeID, double);
     double removeNode(NodeID);
@@ -38,15 +37,33 @@ public:
     std::list<NodeID> getNeighbors(NodeID);
     unsigned int getNumberOfNeighbors(NodeID);
 
-    std::set<NodeID>& edgeMembers(NodeID, NodeID);
-
     std::vector<NodeID> getNodes();
     std::vector<NodeID> getSortedNodes();
-    std::ostream& prettyPrint(std::ostream& os);
+    std::ostream& prettyPrint(std::ostream&);
     void clear();
 
     std::map<NodeID,NodeID> dfsPredecessorMap(NodeID);
 
+    class UndirectedEdge;
+
+};
+
+
+class ScalarGraph::UndirectedEdge {
+    NodeID small;
+    NodeID big;
+public:
+    UndirectedEdge(NodeID u, NodeID v) { small = std::min(u,v); big = std::max(u,v); }
+    NodeID u() const { return small; }
+    NodeID v() const { return big; }
+
+    bool operator<(const ScalarGraph::UndirectedEdge& other) const {
+        NodeID x_u = u();
+        NodeID y_u = other.u();
+        NodeID x_v = v();
+        NodeID y_v = other.v();
+        return (x_u < y_u) || ((x_u == y_u) && (x_v < y_v));
+    }
 };
 
 #endif

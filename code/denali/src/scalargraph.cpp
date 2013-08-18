@@ -60,15 +60,6 @@ void ScalarGraph::removeEdge(NodeID x, NodeID y) {
 }
 
 
-std::set<NodeID>& ScalarGraph::edgeMembers(NodeID x, NodeID y) {
-    Arc e = lemon::findArc(g, id_to_node[x], id_to_node[y]);
-    if (e == lemon::INVALID)
-        e = lemon::findArc(g, id_to_node[y], id_to_node[x]);
-
-    return edge_members[e];
-}
-
-
 std::list<NodeID> ScalarGraph::getChildren(NodeID id) {
     std::list<NodeID> children;
     Node u = id_to_node[id];
@@ -191,7 +182,12 @@ std::map<NodeID,NodeID> ScalarGraph::dfsPredecessorMap(NodeID source) {
     for (lemon::ListDigraph::NodeIt it(g); it!=lemon::INVALID; ++it) {
         Arc a = arcmap[it];
         Node other = g.oppositeNode(it, a);
-        predmap[node_to_id[it]] = node_to_id[other];
+        NodeID this_node = node_to_id[it];
+        NodeID predecessor = node_to_id[other];
+        if (this_node == source) {
+            predecessor = this_node;
+        }
+        predmap[this_node] = predecessor;
     }
     return predmap;
 }

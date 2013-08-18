@@ -22,38 +22,13 @@ int main() {
         g.addEdge(edges[i][0], edges[i][1]);
     }
 
-    ScalarGraph x;
-    x.addNode(0,0);
-    x.addNode(1,0);
-    x.addNode(2,0);
-    x.addNode(3,0);
-    x.addNode(4,0);
-    x.addNode(5,0);
-
-    x.addEdge(1,0);
-    x.addEdge(4,0);
-    x.addEdge(1,2);
-    x.addEdge(3,1);
-    x.addEdge(2,5);
-
-    x.prettyPrint(std::cout);
-
-    std::map<NodeID,NodeID> pm = x.dfsPredecessorMap(0);
-
-    for (int i=0; i<=5; ++i) {
-        std::cout << "Node: " << i << " Pred: " << pm[i] << std::endl;
-    }
-
-    /*
-    ScalarGraph act;
-    ScalarGraph ct;
-    denali::computeAugmentedContourTree(g,act);
-    denali::computeContourTree(g,ct);
-
-    act.prettyPrint(std::cout);
-    std::cout << std::endl << std::string(80, '=') << "\n\n";
+    ContourTree ct;
+    ct.computeContourTree(g);
     ct.prettyPrint(std::cout);
-    */
 
+    ct.setRoot(5);
+
+    std::cout << "test";
+    
 }
 
