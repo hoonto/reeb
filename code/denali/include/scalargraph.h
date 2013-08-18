@@ -1,7 +1,6 @@
 #ifndef SCALARGRAPH_H_GUARD
 #define SCALARGRAPH_H_GUARD
 #include <lemon/list_graph.h>
-#include <lemon/adaptors.h>
 #include <map>
 #include <set>
 #include <vector>
@@ -43,9 +42,10 @@ public:
 
     std::vector<NodeID> getNodes();
     std::vector<NodeID> getSortedNodes();
-    void prettyPrint(std::ostream& os);
+    std::ostream& prettyPrint(std::ostream& os);
     void clear();
 
+    std::map<NodeID,NodeID> dfsPredecessorMap(NodeID);
 
 };
 

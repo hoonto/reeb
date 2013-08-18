@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <iterator>
+#include <lemon/adaptors.h>
+#include <lemon/dfs.h>
 #include "scalargraph.h"
 
 
@@ -34,11 +36,18 @@ double ScalarGraph::getValue(NodeID id) {
 
 
 void ScalarGraph::addEdge(NodeID x, NodeID y) {
-    // get the nodes corresponding to x and y and add the edge (only if edge does not
-    // already exist)
-    if (lemon::findArc(g, id_to_node[x], id_to_node[y]) == lemon::INVALID &&
-        lemon::findArc(g, id_to_node[y], id_to_node[x]) == lemon::INVALID)
+    // Adds an edge from x to y. If:
+    //  - an arc from x to y already exists, nothing happens
+    //  - an arc from y to x exists, it is flipped
+    Node nx = id_to_node[x];
+    Node ny = id_to_node[y];
+    Arc a1 = lemon::findArc(g, nx, ny);
+    Arc a2 = lemon::findArc(g, ny, nx);
+    if (a1==lemon::INVALID && a2==lemon::INVALID) {
         g.addArc(id_to_node[x], id_to_node[y]);
+    } else if (a1==lemon::INVALID) {
+        g.reverseArc(a2);
+    }
 }
 
 
@@ -140,7 +149,7 @@ void ScalarGraph::clear() {
 }
 
 
-void ScalarGraph::prettyPrint(std::ostream& os) {
+std::ostream& ScalarGraph::prettyPrint(std::ostream& os) {
     for (lemon::ListDigraph::NodeIt v(g); v!=lemon::INVALID; ++v) {
         os << "Node " << node_to_id[v] << std::endl;
         os << "\tValue: " << value[v] << std::endl;
@@ -162,4 +171,27 @@ void ScalarGraph::prettyPrint(std::ostream& os) {
         std::copy(neighbors.begin(), neighbors.end(), vector_printer);
         os << "]" << std::endl;
     }
+    return os;
+}
+
+
+std::map<NodeID,NodeID> ScalarGraph::dfsPredecessorMap(NodeID source) {
+    // Given a source node, computes a DFS tree, returning a mapping from each
+    // node to its predecessor.
+
+    // look at the undirected version of the graph
+    lemon::Undirector<lemon::ListDigraph> g_undirected(g);
+
+    // compute a NodeMap of predecessors by doing a DFS
+    lemon::ListDigraph::NodeMap<Arc> arcmap(g);
+    lemon::dfs(g_undirected).predMap(arcmap).run(id_to_node[source]);
+
+    // now process the arcs into a map from nodeID to predecessor
+    std::map<NodeID,NodeID> predmap;
+    for (lemon::ListDigraph::NodeIt it(g); it!=lemon::INVALID; ++it) {
+        Arc a = arcmap[it];
+        Node other = g.oppositeNode(it, a);
+        predmap[node_to_id[it]] = node_to_id[other];
+    }
+    return predmap;
 }

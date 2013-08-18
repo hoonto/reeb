@@ -9,16 +9,16 @@ COMMONDEPS = $(IDIR)/common.h
 all:
 	echo "Nothing to do..."
 
-contour: contour.cpp scalargraph contourtree
+contour: contour.cpp $(ODIR)/scalargraph.o $(ODIR)/contourtree.o
 	$(CC) $(CFLAGS) $(ODIR)/*.o contour.cpp -o contour
 
-scalargraph: $(SDIR)/scalargraph.cpp $(IDIR)/scalargraph.h $(COMMONDEPS)
+$(ODIR)/scalargraph.o: $(SDIR)/scalargraph.cpp $(IDIR)/scalargraph.h $(COMMONDEPS)
 	$(CC) $(CFLAGS) $(SDIR)/scalargraph.cpp -c -o $(ODIR)/scalargraph.o
 
-contourtree: $(SDIR)/contourtree.cpp $(IDIR)/contourtree.h scalargraph disjointsetforest $(COMMONDEPS)
+$(ODIR)/contourtree.o: $(SDIR)/contourtree.cpp $(IDIR)/contourtree.h $(ODIR)/scalargraph.o $(ODIR)/disjointsetforest.o $(COMMONDEPS)
 	$(CC) $(CFLAGS) $(SDIR)/contourtree.cpp -c -o $(ODIR)/contourtree.o
 
-disjointsetforest: $(SDIR)/disjointsetforest.cpp $(IDIR)/disjointsetforest.h $(COMMONDEPS)
+$(ODIR)/disjointsetforest.o: $(SDIR)/disjointsetforest.cpp $(IDIR)/disjointsetforest.h $(COMMONDEPS)
 	$(CC) $(CFLAGS) $(SDIR)/disjointsetforest.cpp -c -o $(ODIR)/disjointsetforest.o
 
 clean:

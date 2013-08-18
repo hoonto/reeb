@@ -9,9 +9,8 @@
 #include "common.h"
 
 
-namespace {
-void computeJoinTree(ScalarGraph& sg, ScalarGraph& join_tree, 
-        std::vector<NodeID>& order_to_id, std::map<NodeID,NodeID>& id_to_order) {
+void ContourTree::computeJoinTree(ScalarGraph& sg, std::vector<NodeID>& order_to_id,
+        std::map<NodeID,NodeID>& id_to_order) {
     join_tree.clear();
     DisjointSetForest forest;
 
@@ -45,12 +44,10 @@ void computeJoinTree(ScalarGraph& sg, ScalarGraph& join_tree,
         }
     }
 }
-}
 
 
-namespace {
-void computeSplitTree(ScalarGraph& sg, ScalarGraph& split_tree,
-        std::vector<NodeID>& order_to_id, std::map<NodeID,NodeID>& id_to_order) {
+void ContourTree::computeSplitTree(ScalarGraph& sg, std::vector<NodeID>& order_to_id,
+        std::map<NodeID,NodeID>& id_to_order) {
     split_tree.clear();
     DisjointSetForest forest;
 
@@ -85,7 +82,8 @@ void computeSplitTree(ScalarGraph& sg, ScalarGraph& split_tree,
 }
 
 
-void mergeTrees(ScalarGraph& join_tree, ScalarGraph& split_tree, ScalarGraph& contour_tree) {
+void ContourTree::mergeTrees() {
+    is_rooted = false;
     contour_tree.clear();
     std::vector<NodeID> nodes = join_tree.getNodes();  
     std::queue<NodeID> merge_queue;
@@ -143,10 +141,9 @@ void mergeTrees(ScalarGraph& join_tree, ScalarGraph& split_tree, ScalarGraph& co
         merge_queue.pop();
     }
 }
-}
 
 
-void denali::computeAugmentedContourTree(ScalarGraph& plex, ScalarGraph& contour_tree) {
+void ContourTree::computeAugmentedContourTree(ScalarGraph& plex) {
     
     // get the sorted nodes
     std::vector<NodeID> order_to_id = plex.getSortedNodes();
@@ -158,36 +155,36 @@ void denali::computeAugmentedContourTree(ScalarGraph& plex, ScalarGraph& contour
     }
 
     ScalarGraph join_tree, split_tree;
-    computeJoinTree(plex, join_tree, order_to_id, id_to_order);
-    computeSplitTree(plex, split_tree, order_to_id, id_to_order);
-    mergeTrees(join_tree, split_tree, contour_tree);
+    computeJoinTree(plex, order_to_id, id_to_order);
+    computeSplitTree(plex, order_to_id, id_to_order);
+    mergeTrees();
 }
 
 
-void denali::computeContourTree(ScalarGraph& plex, ScalarGraph& contour_tree) {
+void ContourTree::computeContourTree(ScalarGraph& plex) {
 
     // first compute the augmented contour tree
-    denali::computeAugmentedContourTree(plex, contour_tree);
+    computeAugmentedContourTree(plex);
 
     // now remove the regular vertices
-    denali::removeRegularVertices(contour_tree);
+    removeRegularVertices();
     
 }
 
 
-void denali::removeRegularVertices(ScalarGraph& sg) {
-    std::vector<NodeID> nodes = sg.getNodes();    
+void ContourTree::removeRegularVertices() {
+    std::vector<NodeID> nodes = contour_tree.getNodes();    
     std::list<NodeID> regular_nodes;
 
     for (std::vector<NodeID>::iterator it=nodes.begin(); it!=nodes.end(); ++it) {
-        if (isRegularNode(sg, *it)) {
+        if (isRegularNode(*it)) {
             regular_nodes.push_back(*it);
         }
     }
 
     for (std::list<NodeID>::iterator it=regular_nodes.begin(); it!=regular_nodes.end(); ++it) {
 
-        std::list<NodeID> neighbors = sg.getNeighbors(*it);
+        std::list<NodeID> neighbors = contour_tree.getNeighbors(*it);
 
         // get the two neighbor node ids
         std::list<NodeID>::iterator neighbor = neighbors.begin();
@@ -196,8 +193,8 @@ void denali::removeRegularVertices(ScalarGraph& sg) {
         NodeID n2 = (*neighbor);
 
         // get their members
-        std::set<NodeID> m1 = sg.edgeMembers(n1, *it);
-        std::set<NodeID> m2 = sg.edgeMembers(n2, *it);
+        std::set<NodeID> m1 = contour_tree.edgeMembers(n1, *it);
+        std::set<NodeID> m2 = contour_tree.edgeMembers(n2, *it);
 
         // union the members
         std::set<NodeID> members;
@@ -205,30 +202,30 @@ void denali::removeRegularVertices(ScalarGraph& sg) {
         members.insert(m2.begin(), m2.end());
 
         // connect the other two nodes
-        sg.addEdge(n1, n2);
+        contour_tree.addEdge(n1, n2);
 
         // delete the middle node
-        sg.removeNode(*it);
+        contour_tree.removeNode(*it);
 
         // update the new edge's members
-        sg.edgeMembers(n1, n2) = members;
+        contour_tree.edgeMembers(n1, n2) = members;
 
     }
 
 }
 
 
-bool denali::isRegularNode(ScalarGraph& g, NodeID u) {
+bool ContourTree::isRegularNode(NodeID u) {
     // Checks to see if a node u in g is regular (does it have exactly one
     // neighbors that is less than it, and one that is greater?
     unsigned int n_lesser = 0;
     unsigned int n_greater = 0;
-    double u_height = g.getValue(u);
+    double u_height = contour_tree.getValue(u);
 
-    std::list<NodeID> neighbors = g.getNeighbors(u);
+    std::list<NodeID> neighbors = contour_tree.getNeighbors(u);
     for (std::list<NodeID>::iterator it=neighbors.begin(); it!=neighbors.end(); ++it) {
         NodeID v = (*it);
-        double v_height = g.getValue(v);
+        double v_height = contour_tree.getValue(v);
         
         if (v_height > u_height) {
             n_greater++;
@@ -239,4 +236,18 @@ bool denali::isRegularNode(ScalarGraph& g, NodeID u) {
 
     return n_greater==1 && n_lesser==1;
 }
-        
+
+
+std::ostream& ContourTree::prettyPrint(std::ostream& os) {
+    return contour_tree.prettyPrint(os);
+}
+
+
+bool ContourTree::isRooted() {
+    return is_rooted;
+}
+
+
+void ContourTree::chooseRoot(NodeID root) {
+
+}
