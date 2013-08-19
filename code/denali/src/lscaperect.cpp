@@ -1,9 +1,19 @@
 #include <cmath>
 #include "lscaperect.h"
 
+// Forward-declare some helper functions
 namespace{
 void broadcastAltitude(std::vector<RectangularLandscape::Point>&, double);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// RectangularLandscape Methods
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -303,5 +313,55 @@ void broadcastAltitude(std::vector<RectangularLandscape::Point>& points,
 }
 
 
-} // namespace 
+RectangularLandscape::IndexVector makeTriangle(
+        RectangularLandscape::Index a, 
+        RectangularLandscape::Index b,
+        RectangularLandscape::Index c) {
+    // Given some indices, returns a vector with those indices as entries.
+    RectangularLandscape::IndexVector triangle;
+    triangle.push_back(a);
+    triangle.push_back(b);
+    triangle.push_back(c);
+    return triangle;
+}
 
+
+RectangularLandscape::Mesh triangulateNestedRectangles(
+        RectangularLandscape::IndexVector& outer,
+        RectangularLandscape::IndexVector& inner) {
+    // instantiate an empty mesh (vector of triangles)
+    typedef RectangularLandscape::Mesh Mesh;
+    Mesh mesh;
+
+    // add the triangles
+    mesh.push_back(makeTriangle(outer[0], inner[0], inner[1]));
+    mesh.push_back(makeTriangle(outer[1], inner[1], inner[3]));
+    mesh.push_back(makeTriangle(outer[3], inner[3], inner[2]));
+    mesh.push_back(makeTriangle(outer[2], inner[0], inner[2]));
+    mesh.push_back(makeTriangle(outer[0], outer[1], inner[1]));
+    mesh.push_back(makeTriangle(outer[1], outer[3], inner[3]));
+    mesh.push_back(makeTriangle(outer[3], outer[2], inner[2]));
+    mesh.push_back(makeTriangle(outer[2], outer[0], inner[0]));
+
+    return mesh;
+}
+
+
+RectangularLandscape::Mesh triangulateNestedPoint(
+        RectangularLandscape::IndexVector& outer,
+        RectangularLandscape::IndexVector& inner) {
+    typedef RectangularLandscape::Mesh Mesh;
+    typedef RectangularLandscape::Index Index;
+    Mesh mesh;
+    Index point = inner.front();
+
+    mesh.push_back(makeTriangle(outer[0], outer[1], point));
+    mesh.push_back(makeTriangle(outer[1], outer[3], point));
+    mesh.push_back(makeTriangle(outer[3], outer[2], point));
+    mesh.push_back(makeTriangle(outer[2], outer[0], point));
+
+    return mesh;
+}
+
+
+} // namespace 

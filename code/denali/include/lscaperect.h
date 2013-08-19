@@ -18,9 +18,12 @@ class RectangularLandscape {
     struct SaddleOuterContour;
     struct SaddleInnerContour;
     struct LeafContour;
-    typedef unsigned long int Index;
 public:
+    typedef unsigned long int Index;
+    typedef std::vector<Index> IndexVector;
+    typedef std::vector<IndexVector> Mesh;
     struct Point;
+    typedef std::vector<Point> PointVector;
     class Rectangle;
 };
 
@@ -85,6 +88,5 @@ public:
     friend std::ostream& operator<<(std::ostream& os, 
         const RectangularLandscape::Rectangle r);
 };
-
 
 #endif
