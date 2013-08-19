@@ -178,6 +178,16 @@ RectangularLandscape::RootContour::enumerateIndices(Index base) {
 }
 
 
+// SaddleInnerContour
+////////////////////////////////////////////////////////////////////////////////
+struct RectangularLandscape::SaddleInnerContour : public Contour {
+    Rectangle rectangle;
+
+    SaddleInnerContour(NodeID node, Rectangle rectangle, double altitude) 
+            : Contour(node, altitude), rectangle(rectangle) { }
+};
+
+
 // SaddleOuterContour
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -191,6 +201,54 @@ struct RectangularLandscape::SaddleOuterContour : public Contour {
 
     std::vector<Point> enumerateIndices(Index);
 };
+
+
+std::vector<RectangularLandscape::Point>
+RectangularLandscape::SaddleOuterContour::enumerateIndices(Index base) {
+    // We will add the points in a counter-clockwise order. First, we enumerate
+    // the points from the left side of the bounding rectangle.
+    std::vector<Point> points;
+    std::vector<Point> outer_rectangle = rectangle.points();
+    points.insert(points.end(), outer_rectangle.begin(), 
+        outer_rectangle.begin()+2);
+    indices.push_back(base);
+    indices.push_back(base+1);
+
+    typedef std::vector<SaddleInnerContour> Children;
+    // INVARIANTS:
+    // base: the index of the lower left point of the inner_rectangle
+    for (Children::iterator it=children.begin(); it!=children.end(); ++it) {
+        // alias the child
+        SaddleInnerContour& child = (*it);
+
+        // get the inner rectangle and the inner rectangle's points
+        Rectangle inner_rectangle = child.rectangle;
+        std::vector<Point> inner_points = inner_rectangle.points();
+
+        // rely on the fact that the points are returned in a specific order to
+        // insert them into the outer contour's points list, but only add the 
+        // points from the right side of the inner rectangle, as the ones on
+        // the left hand side were added by the previous iteration of the loop
+        points.insert(points.end(), inner_points.begin()+2, inner_points.end());
+
+        // calculate the indices of the inner points.
+        child.indices.clear();
+        child.indices.push_back(base);
+        child.indices.push_back(base+1);
+        child.indices.push_back(base+2);
+        child.indices.push_back(base+3);
+
+        // maintain the loop invariant. Since there are two new points (the 
+        // other two were seen in the previous iteration), we increment base
+        // by exactly two.
+        base += 2;
+    }
+    
+    // update the heights
+    broadcastAltitude(points, altitude);
+
+    return points;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
