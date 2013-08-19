@@ -3,6 +3,7 @@
 #include <iostream> 
 #include <vector>
 #include "common.h"
+#include "contourtree.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,6 +26,8 @@ public:
     struct Point;
     typedef std::vector<Point> PointVector;
     class Rectangle;
+
+    void mapContours(ContourTree&);
 };
 
 
