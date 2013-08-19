@@ -12,6 +12,9 @@ all:
 contour: contour.cpp $(ODIR)/scalargraph.o $(ODIR)/contourtree.o
 	$(CC) $(CFLAGS) $(ODIR)/*.o contour.cpp -o contour
 
+landscape: landscape.cpp $(ODIR)/scalargraph.o $(ODIR)/lscaperect.o
+	$(CC) $(CFLAGS) $(ODIR)/*.o landscape.cpp -o landscape
+
 $(ODIR)/scalargraph.o: $(SDIR)/scalargraph.cpp $(IDIR)/scalargraph.h $(COMMONDEPS)
 	$(CC) $(CFLAGS) $(SDIR)/scalargraph.cpp -c -o $(ODIR)/scalargraph.o
 
@@ -20,6 +23,9 @@ $(ODIR)/contourtree.o: $(SDIR)/contourtree.cpp $(IDIR)/contourtree.h $(ODIR)/sca
 
 $(ODIR)/disjointsetforest.o: $(SDIR)/disjointsetforest.cpp $(IDIR)/disjointsetforest.h $(COMMONDEPS)
 	$(CC) $(CFLAGS) $(SDIR)/disjointsetforest.cpp -c -o $(ODIR)/disjointsetforest.o
+
+$(ODIR)/lscaperect.o: $(SDIR)/lscaperect.cpp $(IDIR)/lscaperect.h $(ODIR)/contourtree.o $(COMMONDEPS) 
+	$(CC) $(CFLAGS) $(SDIR)/lscaperect.cpp -c -o $(ODIR)/lscaperect.o
 
 clean:
 	rm $(ODIR)/*.o

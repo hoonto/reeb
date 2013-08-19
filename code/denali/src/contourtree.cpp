@@ -41,7 +41,6 @@ void ContourTree::computeJoinTree(ScalarGraph& sg, std::vector<NodeID>& order_to
                 // union the sets
                 forest.unionSets(vi,vj,id_to_order);
             }
-            
         }
     }
 }
