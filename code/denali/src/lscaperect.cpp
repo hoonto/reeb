@@ -211,6 +211,7 @@ RectangularLandscape::SaddleOuterContour::enumerateIndices(Index base) {
     std::vector<Point> outer_rectangle = rectangle.points();
     points.insert(points.end(), outer_rectangle.begin(), 
         outer_rectangle.begin()+2);
+    indices.clear();
     indices.push_back(base);
     indices.push_back(base+1);
 
@@ -243,9 +244,40 @@ RectangularLandscape::SaddleOuterContour::enumerateIndices(Index base) {
         // by exactly two.
         base += 2;
     }
+
+    // add the last two indices
+    indices.push_back(base);
+    indices.push_back(base+1);
     
     // update the heights
     broadcastAltitude(points, altitude);
+
+    return points;
+}
+
+
+// LeafContour
+////////////////////////////////////////////////////////////////////////////////
+
+
+struct RectangularLandscape::LeafContour : public Contour {
+    Point point;
+
+    LeafContour(NodeID node, Point point, double altitude) 
+            : Contour(node,altitude), point(point) { }
+
+
+    std::vector<Point> enumerateIndices(Index);
+};
+
+
+std::vector<RectangularLandscape::Point>
+RectangularLandscape::LeafContour::enumerateIndices(Index base) {
+    indices.clear();
+    indices.push_back(base);
+
+    std::vector<Point> points;
+    points.push_back(point);
 
     return points;
 }

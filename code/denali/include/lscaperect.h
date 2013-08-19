@@ -17,7 +17,7 @@ class RectangularLandscape {
     struct RootContour;
     struct SaddleOuterContour;
     struct SaddleInnerContour;
-    struct SaddleLeafContour;
+    struct LeafContour;
     typedef unsigned long int Index;
 public:
     struct Point;
