@@ -142,6 +142,9 @@ std::ostream& operator<<(std::ostream& os,
 
 struct RectangularLandscape::Contour {
     std::vector<Index> indices;
+    NodeID node;
+    double altitude;
+    Contour(NodeID node, double altitude) : node(node), altitude(altitude) { }
 };
 
 
@@ -151,15 +154,13 @@ struct RectangularLandscape::Contour {
 
 struct RectangularLandscape::RootContour : public Contour {
     Rectangle rectangle;
-    double altitude;
 
-
-    RootContour(Rectangle rectangle, double altitude)
-            : rectangle(rectangle), altitude(altitude) {
-    }
+    RootContour(NodeID node, Rectangle rectangle, double altitude)
+            : Contour(node, altitude), rectangle(rectangle) { }
         
     std::vector<Point> enumerateIndices(Index);
 };
+
 
 std::vector<RectangularLandscape::Point> 
 RectangularLandscape::RootContour::enumerateIndices(Index base) {
@@ -180,6 +181,16 @@ RectangularLandscape::RootContour::enumerateIndices(Index base) {
 // SaddleOuterContour
 ////////////////////////////////////////////////////////////////////////////////
 
+
+struct RectangularLandscape::SaddleOuterContour : public Contour {
+    Rectangle rectangle;
+    std::vector<SaddleInnerContour> children;
+
+    SaddleOuterContour(NodeID node, Rectangle rectangle, double altitude)
+            : Contour(node, altitude), rectangle(rectangle) { }
+
+    std::vector<Point> enumerateIndices(Index);
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////
