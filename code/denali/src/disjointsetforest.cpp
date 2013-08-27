@@ -51,7 +51,7 @@ void DisjointSetForest::unionSets(NodeID x, NodeID y, std::map<NodeID,NodeID> en
             if (rep_x.rank == rep_y.rank) rep_y.rank++;
         }
     }
-    return;
+
 }
 
 

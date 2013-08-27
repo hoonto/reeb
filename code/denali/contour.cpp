@@ -1,12 +1,14 @@
 #include <iostream>
+#include <iterator>
+#include <string>
 #include "scalargraph.h"
-#include "scalartree.h"
 #include "contourtree.h"
 
 int main() {
 
     // make the scalar graph on pg. 390 of Wenger
     ScalarGraph g;
+
     const int nodevalues[] = {25, 62, 45, 66, 16, 32, 64, 39, 58, 51, 53, 30};
     for (int i=0; i<12; ++i) {
         g.addNode(i+1, nodevalues[i]);
@@ -21,13 +23,12 @@ int main() {
     }
 
     ContourTree ct;
-    ct.compute(g);
+    ct.computeContourTree(g);
     ct.prettyPrint(std::cout);
-    /*
-    // compute the contour tree from the scalar graph (will sort inside function call)
-    ct.compute(g);
-    std::cout << "It worjked.";
-    */
 
+    ct.setRoot(5);
+
+    std::cout << "test";
+    
 }
 
