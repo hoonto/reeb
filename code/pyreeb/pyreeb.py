@@ -109,6 +109,25 @@ def geodesic_distance(plex, root=None):
 
 ###############################################################################
 #
+# FUNCTIONS ON REEB GRAPHS
+#
+###############################################################################
+
+def contract(reeb_graph):
+    """
+    Given an augmented reeb graph, contracts it, returning a graph where each
+    edge has a "members" property listing the nodes it contains.
+    """
+    g = reeb_graph.copy()
+    # give every edge the members property
+    for u,v in g.edges_iter():
+        g[u][v]['members'] = set()
+
+    return g
+
+
+###############################################################################
+#
 # RANDREEB INTERFACE
 #
 ###############################################################################
@@ -122,9 +141,9 @@ def randreeb(heights, edges, tris):
     write_OFF("complex.off", heights, edges, tris)
     # call randreeb
     output = subprocess.check_output(["./randreeb/ReebGraph", 
-            "-x", "-c", "complex.off"])
+            "-z", "-c", "complex.off"])
     # read the output
-    values, edges = read_OFF("out_aug.off")
+    values, edges = read_OFF("out_cont.off")
     return edges
 
 
@@ -163,7 +182,8 @@ def read_OFF(filepath):
             line = f.readline().strip()
             face = [int(x) for x in line.split()]
             dim = face[0]
-            faces.append(face[1:dim+1])
+            if face[-4:] == [1,0,0,1]: 
+                faces.append(face[1:dim+1])
 
         return values, faces
 
@@ -176,7 +196,7 @@ def write_OFF(filepath, values, edges, faces):
         f.write("OFF\n")
         f.write("{} {} 0\n".format(len(values), len(edges)+len(faces)))
         for v in values:
-            f.write("{}\n".format(v))
+            f.write("0 0 {}\n".format(v))
         
         for x in edges+faces:
             f.write("{} ".format(len(x)))
