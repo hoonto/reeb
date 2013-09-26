@@ -6,6 +6,7 @@ import matplotlib.patches
 import scipy
 import re
 import subprocess
+import itertools
 
 import pdb
 
@@ -57,7 +58,19 @@ def kneighbors_2skeleton(data, k):
     # remove self edges
     edges = [e for e in edges if e[0] != e[1]]
 
+
     return edges, triangles
+
+
+def simplify_triangle_edges(edges, tris):
+    simplified_edges = list(edges)
+    for tri in tris:
+        for p,q in itertools.combinations(tri, 2):
+            if (p,q) in simplified_edges:
+                simplified_edges.remove((p,q))
+            if (q,p) in simplified_edges:
+                simplified_edges.remove((q,p))
+    return simplified_edges
 
 
 def plot_2d_complex(data, edges, tris):
@@ -74,7 +87,8 @@ def plot_2d_complex(data, edges, tris):
 
     for u,v,w in tris:
         points = data[(u,v,w),:]
-        poly = matplotlib.patches.Polygon(points, facecolor='red', alpha=0.2)
+        poly = matplotlib.patches.Polygon(points, facecolor='red', alpha=0.2,
+                color='red')
         plt.gca().add_patch(poly)
 
     plt.show()
@@ -113,6 +127,29 @@ def geodesic_distance(plex, root=None):
 #
 ###############################################################################
 
+
+def is_regular(graph, node):
+    """
+    Determines whether a node in the graph is regular.
+    A node is regular if:
+        1) It is of degree 2.
+        2) It is the only path between its neighbors.
+    """
+    if nx.degree(graph, node) != 2:
+        return False
+
+    # get the parents, of which there are two
+    u,v = nx.neighbors(graph, node)
+
+    n_simple_paths = 0
+    for path in nx.all_simple_paths(graph, u, v):
+        n_simple_paths += 1
+        if n_simple_paths > 1:
+            return False
+    else:
+        return True
+
+
 def contract(reeb_graph):
     """
     Given an augmented reeb graph, contracts it, returning a graph where each
@@ -122,6 +159,23 @@ def contract(reeb_graph):
     # give every edge the members property
     for u,v in g.edges_iter():
         g[u][v]['members'] = set()
+
+    # now reduce each that is regular
+    for node in g.nodes():
+        if is_regular(g, node):
+            # get the neighbors
+            u,v = nx.neighbors(g, node)
+            # link them
+            g.add_edge(u,v)
+
+            # record the members of the edges
+            members = set([node])
+            members = members | g.edge[u][node]['members']
+            members = members | g.edge[v][node]['members']
+            g.edge[u][v]['members'] = members
+
+            # delete the original node
+            g.remove_node(node)
 
     return g
 
@@ -141,9 +195,9 @@ def randreeb(heights, edges, tris):
     write_OFF("complex.off", heights, edges, tris)
     # call randreeb
     output = subprocess.check_output(["./randreeb/ReebGraph", 
-            "-z", "-c", "complex.off"])
+            "-z", "-a", "complex.off"])
     # read the output
-    values, edges = read_OFF("out_cont.off")
+    values, edges = read_OFF("out_aug.off")
     return edges
 
 
@@ -182,7 +236,7 @@ def read_OFF(filepath):
             line = f.readline().strip()
             face = [int(x) for x in line.split()]
             dim = face[0]
-            if face[-4:] == [1,0,0,1]: 
+            if face[-4:] == [1,0,0,1] or True:
                 faces.append(face[1:dim+1])
 
         return values, faces
