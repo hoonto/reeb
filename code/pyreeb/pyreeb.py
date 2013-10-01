@@ -191,7 +191,9 @@ def randreeb(heights, edges, tris):
     Interfaces with the randreeb program to compute the reeb graph of a 
     function defined on the 2-skeleton of a simplicial complex.
     """
-    # write the complex
+    import os
+    module_path = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(module_path)
     write_OFF("complex.off", heights, edges, tris)
     # call randreeb
     output = subprocess.check_output(["./randreeb/ReebGraph", 
